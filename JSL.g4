@@ -8,13 +8,12 @@ expr
     | '::' expr
     | ':' expr
     | expr ':' expr
-    | expr '[' expr ']'
+    | expr '[' expr (',' expr)? ']'
     | expr ('++' | '--')
     | ('-' | '!') expr
     | expr ('*' | '/' | '%') expr
     | expr ('+' | '-') expr
     | expr '^' expr
-    | expr '<<' expr
     | expr ('<=' | '>=' | '>' | '<') expr
     | expr ('==' | '!=') expr
     | expr '&' expr
@@ -25,6 +24,7 @@ expr
     | expr
         ('=' | '+=' | '-=' | '*=' | '/=' | '^=' | '%=' | '||=')
       expr
+    | expr '<<' expr
     | '(' expr ')'
     | '{' expr_list? '}'
     | '[' 
@@ -35,6 +35,7 @@ expr
     | '[' matrix_row (',' matrix_row)* ']'
     | expr ';' (expr)?
     ;
+// TODO: matrix operators
 
 func_call: NAME '(' arg_list? ')';
 
@@ -74,7 +75,7 @@ NOT_EQUAL          : '!=';
 LESS               : '<';
 LESS_EQUAL         : '<=';
 GREATER            : '>';
-GREATER_EQUAL      : '>='; // Range checks allowed ( a < b <= c)
+GREATER_EQUAL      : '>=';
 AND                : '&';
 OR                 : '|';
 ASSIGN             : '=';
@@ -113,7 +114,7 @@ LINE_COMMENT
 
 STRING: '"' (~["] | ESCAPE_SEQUENCE)* '"';
 
-
+// TODO dates e.g. 19May2011:10:10
 MISSING: '.';
 NUMBER
     : [0-9]+ '.'? EXPONENT_PART?
