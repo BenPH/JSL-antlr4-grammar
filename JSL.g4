@@ -2,39 +2,45 @@ grammar JSL;
 
 script: expr (';' expr)* ';'? EOF;
 
-expr
-    : atom
-    | func_call
-    | '::' expr
-    | ':' expr
-    | expr ':' expr
-    | expr '[' expr (',' expr)? ']'
-    | expr ('++' | '--')
-    | ('-' | '!') expr
-    | expr ('*' | '/' | '%') expr
-    | expr ('+' | '-') expr
-    | expr '^' expr
-    | expr ('<=' | '>=' | '>' | '<') expr
-    | expr ('==' | '!=') expr
-    | expr '&' expr
-    | expr '|' expr
-    | expr '||' expr
-    | expr '::' expr
-    | expr '`'
-    | expr
-        ('=' | '+=' | '-=' | '*=' | '/=' | '^=' | '%=' | '||=')
-      expr
-    | expr '<<' expr
-    | '(' expr ')'
-    | '{' expr_list? '}'
-    | '[' 
-        (aa_entry (',' aa_entry)* (',' aa_default)
-        | aa_default
-        | '=>') 
-      ']'
-    | '[' matrix_row (',' matrix_row)* ']'
-    | expr ';' (expr)?
-    ;
+expr:
+	atom
+	| func_call
+	| '::' expr
+	| ':' expr
+	| expr ':' expr
+	| expr '[' expr (',' expr)? ']'
+	| expr ('++' | '--')
+	| ('-' | '!') expr
+	| expr ('*' | '/' | '%') expr
+	| expr ('+' | '-') expr
+	| expr '^' expr
+	| expr ('<=' | '>=' | '>' | '<') expr
+	| expr ('==' | '!=') expr
+	| expr '&' expr
+	| expr '|' expr
+	| expr '||' expr
+	| expr '::' expr
+	| expr '`'
+	| expr (
+		'='
+		| '+='
+		| '-='
+		| '*='
+		| '/='
+		| '^='
+		| '%='
+		| '||='
+	) expr
+	| expr '<<' expr
+	| '(' expr ')'
+	| '{' expr_list? '}'
+	| '[' (
+		aa_entry (',' aa_entry)* (',' aa_default)
+		| aa_default
+		| '=>'
+	) ']'
+	| '[' matrix_row (',' matrix_row)* ']'
+	| expr ';' (expr)?;
 // TODO: matrix operators
 
 func_call: NAME '(' arg_list? ')';
@@ -50,77 +56,65 @@ matrix_row: expr (WS+ expr)*;
 aa_entry: expr '=>' expr;
 aa_default: '=>' expr;
 
-atom
-    : NAME
-    | NUMBER
-    | STRING
-    ;
+atom: NAME | NUMBER | STRING;
 
-INC                : '++';
-DEC                : '--';
-POWER              : '^';
-NOT                : '!';
-MUL                : '*';
-EMUL               : ':*';
-DIV                : '/';
-EDIV               : ':/';
-ADD                : '+';
-MINUS              : '-';
-MOD                : '%';
-CONCAT             : '||';
-VCONCAT            : '|/';
-SEND               : '<<';
-EQUAL              : '==';
-NOT_EQUAL          : '!=';
-LESS               : '<';
-LESS_EQUAL         : '<=';
-GREATER            : '>';
-GREATER_EQUAL      : '>=';
-AND                : '&';
-OR                 : '|';
-ASSIGN             : '=';
-ADD_TO             : '+=';
-SUBTRACT_TO        : '-=';
-MUL_TO             : '*=';
-DIV_TO             : '/=';
-MOD_TO             : '%=';
-CONCAT_TO          : '||=';
-VCONCAT_TO         : '|/=';
-GLUE               : ';';
-COLON              : ':';
-DOUBLE_COLON       : '::';
-COMMA              : ',';
-BACK_QUOTE         : '`';
-ARROW              : '=>';
+INC:                '++';
+DEC:                '--';
+POWER:              '^';
+NOT:                '!';
+MUL:                '*';
+EMUL:               ':*';
+DIV:                '/';
+EDIV:               ':/';
+ADD:                '+';
+MINUS:              '-';
+MOD:                '%';
+CONCAT:             '||';
+VCONCAT:            '|/';
+SEND:               '<<';
+EQUAL:              '==';
+NOT_EQUAL:          '!=';
+LESS:               '<';
+LESS_EQUAL:         '<=';
+GREATER:            '>';
+GREATER_EQUAL:      '>=';
+AND:                '&';
+OR:                 '|';
+ASSIGN:             '=';
+ADD_TO:             '+=';
+SUBTRACT_TO:        '-=';
+MUL_TO:             '*=';
+DIV_TO:             '/=';
+MOD_TO:             '%=';
+CONCAT_TO:          '||=';
+VCONCAT_TO:         '|/=';
+GLUE:               ';';
+COLON:              ':';
+DOUBLE_COLON:       '::';
+COMMA:              ',';
+BACK_QUOTE:         '`';
+ARROW:              '=>';
 
+OPEN_PAREN:         '(';
+CLOSE_PAREN:        ')';
+OPEN_BRACE:         '{';
+CLOSE_BRACE:        '}';
+OPEN_BRACKET:       '[';
+CLOSE_BRACKET:      ']';
 
-OPEN_PAREN         : '(';
-CLOSE_PAREN        : ')';
-OPEN_BRACE         : '{';
-CLOSE_BRACE        : '}';
-OPEN_BRACKET       : '[';
-CLOSE_BRACKET      : ']';
+BLOCK_COMMENT:
+	'/*' (BLOCK_COMMENT | .)*? '*/' -> channel(HIDDEN);
 
-BLOCK_COMMENT
-    : '/*' ( BLOCK_COMMENT | . )*? '*/'
-      -> channel(HIDDEN)
-    ;
-
-LINE_COMMENT
-    :'//' ~[\r\n]*
-      -> channel(HIDDEN)
-    ;
-
+LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);
 
 STRING: '"' (~["] | ESCAPE_SEQUENCE)* '"';
 
 // TODO dates e.g. 19May2011:10:10
 MISSING: '.';
-NUMBER
-    : [0-9]+ '.'? EXPONENT_PART?
-    | [0-9]* '.' [0-9]+ EXPONENT_PART?
-    | MISSING
-    ;
+NUMBER:
+	[0-9]+ '.'? EXPONENT_PART?
+	| [0-9]* '.' [0-9]+ EXPONENT_PART?
+	| MISSING;
 
 // TODO: quoted name syntax i.e. "###"n and Name("###")
 // Currently includes trailing whitespace in names
@@ -130,11 +124,8 @@ WS: [ \t\r\n]+ -> channel(HIDDEN);
 
 // TODO: fragment \[...]\
 
-fragment ESCAPE_SEQUENCE
-    : '\\!' [btrnNf0"\\]
-    | '\\!' [uU] [0-9A-Fa-f] [0-9A-Fa-f] [0-9A-Fa-f] [0-9A-Fa-f]
-    ;
+fragment ESCAPE_SEQUENCE:
+	'\\!' [btrnNf0"\\]
+	| '\\!' [uU] [0-9A-Fa-f] [0-9A-Fa-f] [0-9A-Fa-f] [0-9A-Fa-f];
 
-fragment EXPONENT_PART
-    : [eE] [+-]? [0-9]
-    ;
+fragment EXPONENT_PART: [eE] [+-]? [0-9];
