@@ -5,33 +5,24 @@ script: expr (';' expr)* ';'? EOF;
 expr:
 	atom
 	| func_call
+  | ':::' expr
 	| '::' expr
 	| ':' expr
 	| expr ':' expr
 	| expr '[' expr (',' expr)? ']'
 	| expr ('++' | '--')
+	| <assoc = right> expr '^' expr
 	| ('-' | '!') expr
-	| expr ('*' | '/' | '%') expr
-	| expr ('+' | '-') expr
-	| expr '^' expr
-	| expr ('<=' | '>=' | '>' | '<') expr
-	| expr ('==' | '!=') expr
-	| expr '&' expr
-	| expr '|' expr
-	| expr '||' expr
-	| expr '::' expr
 	| expr '`'
-	| expr (
-		'='
-		| '+='
-		| '-='
-		| '*='
-		| '/='
-		| '^='
-		| '%='
-		| '||='
-	) expr
+	| expr ('*' | '/' | ':*' | ':/') expr
+	| expr ('+' | '-') expr
+	| expr '||' expr
+	| expr '|/' expr
+	| expr '::' expr
 	| expr '<<' expr
+	| expr ('==' | '!=' | '<=' | '>=' | '>' | '<') expr
+	| expr ('&' | '|') expr
+  | expr ('=' | '+=' | '-=' | '*=' | '/=' | '^=' | '||=') expr
 	| '(' expr ')'
 	| '{' expr_list? '}'
 	| '[' (
@@ -41,7 +32,6 @@ expr:
 	) ']'
 	| '[' matrix_row (',' matrix_row)* ']'
 	| expr ';' (expr)?;
-// TODO: matrix operators
 
 func_call: NAME '(' arg_list? ')';
 
@@ -133,8 +123,8 @@ DATE:
 
 MISSING: '.';
 
-// TODO: quoted name syntax i.e. "###"n and Name("###")
-// Currently includes trailing whitespace in names
+// TODO: quoted name syntax i.e. "###"n and Name("###") Currently includes trailing whitespace in
+// names
 NAME: [_A-Za-z][_'%.\\0-9A-Za-z\u0080-\uFFFF \n\t\r]*;
 
 WS: [ \t\r\n]+ -> channel(HIDDEN);
