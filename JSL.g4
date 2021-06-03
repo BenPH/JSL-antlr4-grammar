@@ -51,7 +51,7 @@ arg_list: expr (',' '<<'? expr)*;
 
 expr_list: expr (',' expr)*;
 
-matrix_row: expr (WS+ expr)*;
+matrix_row: NUMBER (WS+ NUMBER)*;
 
 aa_entry: expr '=>' expr;
 aa_default: '=>' expr;
@@ -109,12 +109,29 @@ LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);
 
 STRING: '"' (~["] | ESCAPE_SEQUENCE)* '"';
 
-// TODO dates e.g. 19May2011:10:10
-MISSING: '.';
 NUMBER:
 	[0-9]+ '.'? EXPONENT_PART?
 	| [0-9]* '.' [0-9]+ EXPONENT_PART?
-	| MISSING;
+	| MISSING
+	| DATE;
+
+DATE:
+	[0-3]? [0-9] (
+		[jJ][aA][nN]
+		| [fF][eE][bB]
+		| [mM][aA][rR]
+		| [aA][pP][rR]
+		| [mM][aA][yY]
+		| [jJ][uU][nN]
+		| [jJ][uU][lL]
+		| [aA][uU][gG]
+		| [sS][eE][pP]
+		| [oO][cC][tT]
+		| [nN][oO][vV]
+		| [dD][eE][cC]
+	) [0-9]+;
+
+MISSING: '.';
 
 // TODO: quoted name syntax i.e. "###"n and Name("###")
 // Currently includes trailing whitespace in names
