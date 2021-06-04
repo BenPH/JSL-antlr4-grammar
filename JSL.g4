@@ -112,7 +112,7 @@ BLOCK_COMMENT:
 
 LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);
 
-STRING: '"' (~["] | ESCAPE_SEQUENCE)* '"';
+STRING: '"' ( ESCAPE_SEQUENCE | RAW | ~["] )* '"';
 
 NUMBER:
 	[0-9]+ '.'? EXPONENT_PART?
@@ -145,8 +145,7 @@ NAME:
 
 WS: [ \t\r\n]+ -> channel(HIDDEN);
 
-// TODO: fragment \[...]\
-
+fragment RAW: '\\[' .*? ']\\';
 fragment ESCAPE_SEQUENCE:
 	'\\!' [btrnNf0"\\]
 	| '\\!' [uU] [0-9A-Fa-f] [0-9A-Fa-f] [0-9A-Fa-f] [0-9A-Fa-f];
