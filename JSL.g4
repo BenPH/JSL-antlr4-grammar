@@ -3,12 +3,7 @@ grammar JSL;
 script: expr (';' expr)* ';'? EOF;
 
 expr:
-	atom
-	| func_call
-  | ':::' expr
-	| '::' expr
-	| ':' expr
-	| expr ':' expr
+  func_call
 	| expr '[' expr (',' expr)? ']'
 	| expr ('++' | '--')
 	| <assoc = right> expr '^' expr
@@ -22,7 +17,16 @@ expr:
 	| expr '<<' expr
 	| expr ('==' | '!=' | '<=' | '>=' | '>' | '<') expr
 	| expr ('&' | '|') expr
-  | expr ('=' | '+=' | '-=' | '*=' | '/=' | '^=' | '||=') expr
+	| <assoc = right> expr (
+		'='
+		| '+='
+		| '-='
+		| '*='
+		| '/='
+		| '^='
+		| '||='
+		| '|/='
+	) expr
 	| '(' expr ')'
 	| '{' expr_list? '}'
 	| '[' (
@@ -31,9 +35,12 @@ expr:
 		| '=>'
 	) ']'
 	| '[' matrix_row (',' matrix_row)* ']'
-	| expr ';' (expr)?;
+	| expr ';' (expr)?
+  | STRING
+  | NUMBER
+  | name;
 
-func_call: NAME '(' arg_list? ')';
+func_call: name '(' arg_list? ')';
 
 // TODO: Allow NewObject("classname"()) constructor
 
@@ -46,7 +53,16 @@ matrix_row: NUMBER (WS+ NUMBER)*;
 aa_entry: expr '=>' expr;
 aa_default: '=>' expr;
 
-atom: NAME | NUMBER | STRING;
+atom: NUMBER | STRING | name;
+
+name: NAME | scoped_name;
+
+scoped_name:
+  ':::' NAME
+	| '::' NAME
+	| ':' NAME
+	| NAME ':' NAME
+	| STRING ':' NAME;
 
 INC:                '++';
 DEC:                '--';
@@ -58,7 +74,6 @@ DIV:                '/';
 EDIV:               ':/';
 ADD:                '+';
 MINUS:              '-';
-MOD:                '%';
 CONCAT:             '||';
 VCONCAT:            '|/';
 SEND:               '<<';
@@ -75,12 +90,12 @@ ADD_TO:             '+=';
 SUBTRACT_TO:        '-=';
 MUL_TO:             '*=';
 DIV_TO:             '/=';
-MOD_TO:             '%=';
 CONCAT_TO:          '||=';
 VCONCAT_TO:         '|/=';
 GLUE:               ';';
 COLON:              ':';
 DOUBLE_COLON:       '::';
+TRIPLE_COLON:       ':::';
 COMMA:              ',';
 BACK_QUOTE:         '`';
 ARROW:              '=>';
@@ -123,9 +138,10 @@ DATE:
 
 MISSING: '.';
 
-// TODO: quoted name syntax i.e. "###"n and Name("###") Currently includes trailing whitespace in
-// names
-NAME: [_A-Za-z][_'%.\\0-9A-Za-z\u0080-\uFFFF \n\t\r]*;
+// Currently includes trailing whitespace in names
+NAME:
+  [_A-Za-z][_'%.\\0-9A-Za-z\u0080-\uFFFF \n\t\r]*
+  | STRING 'n';
 
 WS: [ \t\r\n]+ -> channel(HIDDEN);
 
