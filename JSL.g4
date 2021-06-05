@@ -23,7 +23,6 @@ expr:
 		| '-='
 		| '*='
 		| '/='
-		| '^='
 		| '||='
 		| '|/='
 	) expr
@@ -107,8 +106,9 @@ CLOSE_BRACE:        '}';
 OPEN_BRACKET:       '[';
 CLOSE_BRACKET:      ']';
 
+// Each nested comment must be closed
 BLOCK_COMMENT:
-	'/*' (BLOCK_COMMENT | .)*? '*/' -> channel(HIDDEN);
+	'/*' ('/'*? BLOCK_COMMENT | ('/'* | '*'*) ~[/*])*? '*'*? '*/' -> channel(HIDDEN);
 
 LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);
 
