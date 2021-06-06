@@ -1,9 +1,11 @@
 grammar JSL;
 
-script: expr (';' expr)* ';'? EOF;
+script: expr_sequence EOF;
+
+expr_sequence: expr ((';' expr) | ';')*;
 
 expr:
-  func_call
+	func_call
 	| expr '[' expr (',' expr)? ']'
 	| expr ('++' | '--')
 	| <assoc = right> expr '^' expr
@@ -26,15 +28,14 @@ expr:
 		| '||='
 		| '|/='
 	) expr
-	| '(' expr ')'
-	| '{' expr_list? '}'
+	| '(' expr_sequence ')'
+	| '{' arg_list? '}'
 	| '[' (
 		aa_entry (',' aa_entry)* (',' aa_default)
 		| aa_default
 		| '=>'
 	) ']'
-	| '[' matrix_row (',' matrix_row)* ']'
-	| expr ';' (expr)?
+	| '[' matrix_row ((',' | ';') matrix_row)* ']'
   | STRING
   | NUMBER
   | name;
@@ -43,9 +44,7 @@ func_call: name '(' arg_list? ')';
 
 // TODO: Allow NewObject("classname"()) constructor
 
-arg_list: expr (',' '<<'? expr)*;
-
-expr_list: expr (',' expr)*;
+arg_list: expr_sequence (',' '<<'? expr_sequence)*;
 
 matrix_row: NUMBER (WS+ NUMBER)*;
 
@@ -112,7 +111,7 @@ BLOCK_COMMENT:
 
 LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);
 
-STRING: '"' ( ESCAPE_SEQUENCE | RAW | ~["] )* '"';
+STRING: '"' ( ESCAPE_SEQUENCE | RAW | ~["])* '"';
 
 NUMBER:
 	[0-9]+ '.'? EXPONENT_PART?
@@ -145,6 +144,7 @@ NAME:
 
 WS: [ \t\r\n]+ -> channel(HIDDEN);
 
+// TODO: Don't allow "\["
 fragment RAW: '\\[' .*? ']\\';
 fragment ESCAPE_SEQUENCE:
 	'\\!' [btrnNf0"\\]
