@@ -1,22 +1,25 @@
 grammar JSL;
 
-script: expr_sequence EOF;
+script: expr_sequence? EOF;
 
 expr_sequence: expr ((';' expr) | ';')*;
 
 expr:
 	func_call
-	| expr '[' expr (',' expr)? ']'
+	| expr '[' (expr (',' expr)?)? ']'
+	| (func_call | paren_expr) ':' (name | func_call)
 	| expr ('++' | '--')
 	| <assoc = right> expr '^' expr
 	| ('-' | '!') expr
 	| expr '`'
+	| expr ('>>' | '>?') expr
 	| expr ('*' | '/' | ':*' | ':/') expr
 	| expr ('+' | '-') expr
 	| expr '||' expr
 	| expr '|/' expr
 	| expr '::' expr
-	| expr '<<' expr
+	| expr message
+	| message
 	| expr ('==' | '!=' | '<=' | '>=' | '>' | '<') expr
 	| expr ('&' | '|') expr
 	| <assoc = right> expr (
@@ -28,25 +31,26 @@ expr:
 		| '||='
 		| '|/='
 	) expr
-	| '(' expr_sequence ')'
-	| '{' arg_list? '}'
+	| paren_expr
+	| '{' list_elements? '}'
 	| '[' (
-		aa_entry (',' aa_entry)* (',' aa_default)
+		aa_entry (',' aa_entry)* (',' aa_default)?
 		| aa_default
 		| '=>'
 	) ']'
-	| '[' matrix_row ((',' | ';') matrix_row)* ']'
+	| '[' (matrix_row ((',' | ';') matrix_row)*)? ']'
   | STRING
   | NUMBER
   | name;
 
-func_call: name '(' arg_list? ')';
+func_call: (name | STRING) '(' arg_list? ')'; // STRING only in the case of NewObject
 
-// TODO: Allow NewObject("classname"()) constructor
+arg_list: ','* expr_sequence (','+ expr_sequence)* ','*; // Extra commas allowed in function calls
+list_elements: ','* expr_sequence (',' expr_sequence)*; // Extra commas allowed at beginning
+paren_expr: '(' expr_sequence ')';
+message: '<<' expr;
 
-arg_list: expr_sequence (',' '<<'? expr_sequence)*;
-
-matrix_row: NUMBER (WS+ NUMBER)*;
+matrix_row: ('-'? NUMBER)+;
 
 aa_entry: expr '=>' expr;
 aa_default: '=>' expr;
@@ -56,11 +60,11 @@ atom: NUMBER | STRING | name;
 name: NAME | scoped_name;
 
 scoped_name:
-  ':::' NAME
-	| '::' NAME
+	':::' NAME (':' NAME)*
+	| '::' NAME (':' NAME)*
 	| ':' NAME
-	| NAME ':' NAME
-	| STRING ':' NAME;
+	| NAME (':' NAME)+
+	| STRING (':' NAME)+;
 
 INC:                '++';
 DEC:                '--';
@@ -97,6 +101,8 @@ TRIPLE_COLON:       ':::';
 COMMA:              ',';
 BACK_QUOTE:         '`';
 ARROW:              '=>';
+PAT_CONDITIONAL:    '>?';
+PAT_IMMEDIATE:      '>>';
 
 OPEN_PAREN:         '(';
 CLOSE_PAREN:        ')';
